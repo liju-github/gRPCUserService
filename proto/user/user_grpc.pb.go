@@ -19,36 +19,26 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_Register_FullMethodName             = "/user.UserService/Register"
-	UserService_Login_FullMethodName                = "/user.UserService/Login"
-	UserService_VerifyEmail_FullMethodName          = "/user.UserService/VerifyEmail"
-	UserService_GetProfile_FullMethodName           = "/user.UserService/GetProfile"
-	UserService_UpdateProfile_FullMethodName        = "/user.UserService/UpdateProfile"
-	UserService_ChangePassword_FullMethodName       = "/user.UserService/ChangePassword"
-	UserService_RequestPasswordReset_FullMethodName = "/user.UserService/RequestPasswordReset"
-	UserService_VerifyPasswordReset_FullMethodName  = "/user.UserService/VerifyPasswordReset"
-	UserService_RefreshToken_FullMethodName         = "/user.UserService/RefreshToken"
-	UserService_Logout_FullMethodName               = "/user.UserService/Logout"
+	UserService_Register_FullMethodName       = "/user.UserService/Register"
+	UserService_Login_FullMethodName          = "/user.UserService/Login"
+	UserService_VerifyEmail_FullMethodName    = "/user.UserService/VerifyEmail"
+	UserService_GetProfile_FullMethodName     = "/user.UserService/GetProfile"
+	UserService_UpdateProfile_FullMethodName  = "/user.UserService/UpdateProfile"
+	UserService_GetUserByToken_FullMethodName = "/user.UserService/GetUserByToken"
+	UserService_CheckBan_FullMethodName       = "/user.UserService/CheckBan"
 )
 
 // UserServiceClient is the client API for UserService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
-	// User Authentication & Registration
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	VerifyEmail(ctx context.Context, in *EmailVerificationRequest, opts ...grpc.CallOption) (*EmailVerificationResponse, error)
-	// Profile Management
 	GetProfile(ctx context.Context, in *ProfileRequest, opts ...grpc.CallOption) (*ProfileResponse, error)
 	UpdateProfile(ctx context.Context, in *UpdateProfileRequest, opts ...grpc.CallOption) (*UpdateProfileResponse, error)
-	// Password Management
-	ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error)
-	RequestPasswordReset(ctx context.Context, in *PasswordResetRequest, opts ...grpc.CallOption) (*PasswordResetResponse, error)
-	VerifyPasswordReset(ctx context.Context, in *VerifyPasswordResetRequest, opts ...grpc.CallOption) (*VerifyPasswordResetResponse, error)
-	// Token Management
-	RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error)
-	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
+	GetUserByToken(ctx context.Context, in *GetUserByTokenRequest, opts ...grpc.CallOption) (*ProfileResponse, error)
+	CheckBan(ctx context.Context, in *CheckBanRequest, opts ...grpc.CallOption) (*CheckBanResponse, error)
 }
 
 type userServiceClient struct {
@@ -109,50 +99,20 @@ func (c *userServiceClient) UpdateProfile(ctx context.Context, in *UpdateProfile
 	return out, nil
 }
 
-func (c *userServiceClient) ChangePassword(ctx context.Context, in *ChangePasswordRequest, opts ...grpc.CallOption) (*ChangePasswordResponse, error) {
+func (c *userServiceClient) GetUserByToken(ctx context.Context, in *GetUserByTokenRequest, opts ...grpc.CallOption) (*ProfileResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ChangePasswordResponse)
-	err := c.cc.Invoke(ctx, UserService_ChangePassword_FullMethodName, in, out, cOpts...)
+	out := new(ProfileResponse)
+	err := c.cc.Invoke(ctx, UserService_GetUserByToken_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) RequestPasswordReset(ctx context.Context, in *PasswordResetRequest, opts ...grpc.CallOption) (*PasswordResetResponse, error) {
+func (c *userServiceClient) CheckBan(ctx context.Context, in *CheckBanRequest, opts ...grpc.CallOption) (*CheckBanResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(PasswordResetResponse)
-	err := c.cc.Invoke(ctx, UserService_RequestPasswordReset_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) VerifyPasswordReset(ctx context.Context, in *VerifyPasswordResetRequest, opts ...grpc.CallOption) (*VerifyPasswordResetResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(VerifyPasswordResetResponse)
-	err := c.cc.Invoke(ctx, UserService_VerifyPasswordReset_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) RefreshToken(ctx context.Context, in *RefreshTokenRequest, opts ...grpc.CallOption) (*RefreshTokenResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RefreshTokenResponse)
-	err := c.cc.Invoke(ctx, UserService_RefreshToken_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LogoutResponse)
-	err := c.cc.Invoke(ctx, UserService_Logout_FullMethodName, in, out, cOpts...)
+	out := new(CheckBanResponse)
+	err := c.cc.Invoke(ctx, UserService_CheckBan_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -163,20 +123,13 @@ func (c *userServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts 
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
 type UserServiceServer interface {
-	// User Authentication & Registration
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	VerifyEmail(context.Context, *EmailVerificationRequest) (*EmailVerificationResponse, error)
-	// Profile Management
 	GetProfile(context.Context, *ProfileRequest) (*ProfileResponse, error)
 	UpdateProfile(context.Context, *UpdateProfileRequest) (*UpdateProfileResponse, error)
-	// Password Management
-	ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error)
-	RequestPasswordReset(context.Context, *PasswordResetRequest) (*PasswordResetResponse, error)
-	VerifyPasswordReset(context.Context, *VerifyPasswordResetRequest) (*VerifyPasswordResetResponse, error)
-	// Token Management
-	RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error)
-	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
+	GetUserByToken(context.Context, *GetUserByTokenRequest) (*ProfileResponse, error)
+	CheckBan(context.Context, *CheckBanRequest) (*CheckBanResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -202,20 +155,11 @@ func (UnimplementedUserServiceServer) GetProfile(context.Context, *ProfileReques
 func (UnimplementedUserServiceServer) UpdateProfile(context.Context, *UpdateProfileRequest) (*UpdateProfileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateProfile not implemented")
 }
-func (UnimplementedUserServiceServer) ChangePassword(context.Context, *ChangePasswordRequest) (*ChangePasswordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChangePassword not implemented")
+func (UnimplementedUserServiceServer) GetUserByToken(context.Context, *GetUserByTokenRequest) (*ProfileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByToken not implemented")
 }
-func (UnimplementedUserServiceServer) RequestPasswordReset(context.Context, *PasswordResetRequest) (*PasswordResetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestPasswordReset not implemented")
-}
-func (UnimplementedUserServiceServer) VerifyPasswordReset(context.Context, *VerifyPasswordResetRequest) (*VerifyPasswordResetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyPasswordReset not implemented")
-}
-func (UnimplementedUserServiceServer) RefreshToken(context.Context, *RefreshTokenRequest) (*RefreshTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RefreshToken not implemented")
-}
-func (UnimplementedUserServiceServer) Logout(context.Context, *LogoutRequest) (*LogoutResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
+func (UnimplementedUserServiceServer) CheckBan(context.Context, *CheckBanRequest) (*CheckBanResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckBan not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -328,92 +272,38 @@ func _UserService_UpdateProfile_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_ChangePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangePasswordRequest)
+func _UserService_GetUserByToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserByTokenRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).ChangePassword(ctx, in)
+		return srv.(UserServiceServer).GetUserByToken(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_ChangePassword_FullMethodName,
+		FullMethod: UserService_GetUserByToken_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).ChangePassword(ctx, req.(*ChangePasswordRequest))
+		return srv.(UserServiceServer).GetUserByToken(ctx, req.(*GetUserByTokenRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_RequestPasswordReset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PasswordResetRequest)
+func _UserService_CheckBan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckBanRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).RequestPasswordReset(ctx, in)
+		return srv.(UserServiceServer).CheckBan(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_RequestPasswordReset_FullMethodName,
+		FullMethod: UserService_CheckBan_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).RequestPasswordReset(ctx, req.(*PasswordResetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_VerifyPasswordReset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyPasswordResetRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).VerifyPasswordReset(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_VerifyPasswordReset_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).VerifyPasswordReset(ctx, req.(*VerifyPasswordResetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_RefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RefreshTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).RefreshToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_RefreshToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).RefreshToken(ctx, req.(*RefreshTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LogoutRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).Logout(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_Logout_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).Logout(ctx, req.(*LogoutRequest))
+		return srv.(UserServiceServer).CheckBan(ctx, req.(*CheckBanRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -446,24 +336,12 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_UpdateProfile_Handler,
 		},
 		{
-			MethodName: "ChangePassword",
-			Handler:    _UserService_ChangePassword_Handler,
+			MethodName: "GetUserByToken",
+			Handler:    _UserService_GetUserByToken_Handler,
 		},
 		{
-			MethodName: "RequestPasswordReset",
-			Handler:    _UserService_RequestPasswordReset_Handler,
-		},
-		{
-			MethodName: "VerifyPasswordReset",
-			Handler:    _UserService_VerifyPasswordReset_Handler,
-		},
-		{
-			MethodName: "RefreshToken",
-			Handler:    _UserService_RefreshToken_Handler,
-		},
-		{
-			MethodName: "Logout",
-			Handler:    _UserService_Logout_Handler,
+			MethodName: "CheckBan",
+			Handler:    _UserService_CheckBan_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

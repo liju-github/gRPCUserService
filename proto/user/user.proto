@@ -4,26 +4,19 @@ package user;
 option go_package = "proto/user";
 
 service UserService {
-  // User Authentication & Registration
+  
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc VerifyEmail(EmailVerificationRequest) returns (EmailVerificationResponse);
   
-  // Profile Management
+  
   rpc GetProfile(ProfileRequest) returns (ProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
-  
-  // Password Management
-  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
-  rpc RequestPasswordReset(PasswordResetRequest) returns (PasswordResetResponse);
-  rpc VerifyPasswordReset(VerifyPasswordResetRequest) returns (VerifyPasswordResetResponse);
-  
-  // Token Management
-  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
-  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc GetUserByToken(GetUserByTokenRequest) returns (ProfileResponse);
+  rpc CheckBan(CheckBanRequest) returns (CheckBanResponse);
 }
 
-// Registration related messages
+
 message RegisterRequest {
   string email = 1;
   string password = 2;
@@ -39,10 +32,10 @@ message RegisterResponse {
   bool success = 1;
   string message = 2;
   string userId = 3;
-  string verificationCode = 4; // For development/testing only
+  string verificationCode = 4; 
 }
 
-// Login related messages
+
 message LoginRequest {
   string email = 1;
   string password = 2;
@@ -53,11 +46,9 @@ message LoginResponse {
   string token = 2;
   string refreshToken = 3;
   string userId = 4;
-  UserRole role = 5;
-  int64 expiresAt = 6; // Unix timestamp
 }
 
-// Email verification messages
+
 message EmailVerificationRequest {
   string userId = 1;
   string verificationCode = 2;
@@ -66,13 +57,13 @@ message EmailVerificationRequest {
 message EmailVerificationResponse {
   bool success = 1;
   string message = 2;
-  string token = 3; // Optional token after verification
+  string token = 3; 
 }
 
-// Profile related messages
+
 message ProfileRequest {
   string userId = 1;
-  string token = 2; // For authentication
+  string token = 2; 
 }
 
 message ProfileResponse {
@@ -86,10 +77,7 @@ message ProfileResponse {
   string pincode = 8;
   string phoneNumber = 9;
   bool isVerified = 10;
-  UserRole role = 11;
-  int64 createdAt = 12;
-  int64 updatedAt = 13;
-  UserStatus status = 14;
+  bool banned = 11;
 }
 
 message UpdateProfileRequest {
@@ -109,78 +97,16 @@ message UpdateProfileResponse {
   ProfileResponse profile = 3;
 }
 
-// Password management messages
-message ChangePasswordRequest {
-  string token = 1;
-  string currentPassword = 2;
-  string newPassword = 3;
+message GetUserByTokenRequest{
+  string token =1;
 }
 
-message ChangePasswordResponse {
-  bool success = 1;
-  string message = 2;
+message CheckBanRequest{
+  string userID = 1;
+  bool BanStatus = 2;
 }
 
-message PasswordResetRequest {
-  string email = 1;
-}
-
-message PasswordResetResponse {
-  bool success = 1;
-  string message = 2;
-}
-
-message VerifyPasswordResetRequest {
-  string email = 1;
-  string resetCode = 2;
-  string newPassword = 3;
-}
-
-message VerifyPasswordResetResponse {
-  bool success = 1;
-  string message = 2;
-}
-
-// Token management messages
-message RefreshTokenRequest {
-  string refreshToken = 1;
-}
-
-message RefreshTokenResponse {
-  bool success = 1;
-  string token = 2;
-  string refreshToken = 3;
-  int64 expiresAt = 4;
-}
-
-message LogoutRequest {
-  string token = 1;
-}
-
-message LogoutResponse {
-  bool success = 1;
-  string message = 2;
-}
-
-// Enums for user properties
-enum UserRole {
-  USER_ROLE_UNSPECIFIED = 0;
-  USER_ROLE_USER = 1;
-  USER_ROLE_ADMIN = 2;
-  USER_ROLE_SELLER = 3;
-}
-
-enum UserStatus {
-  USER_STATUS_UNSPECIFIED = 0;
-  USER_STATUS_ACTIVE = 1;
-  USER_STATUS_INACTIVE = 2;
-  USER_STATUS_SUSPENDED = 3;
-  USER_STATUS_BANNED = 4;
-}
-
-// Error handling
-message Error {
-  int32 code = 1;
-  string message = 2;
-  string details = 3;
+message CheckBanResponse{
+  string userID = 1;
+  bool BanStatus = 2;
 }

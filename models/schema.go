@@ -12,5 +12,6 @@ type User struct {
 	PhoneNumber    string
 	Reputation     int32
 	VerificationCode string
+	IsBanned bool
 	IsVerified     bool
 }

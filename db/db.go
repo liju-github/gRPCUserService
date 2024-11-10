@@ -7,60 +7,58 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
 	"github.com/liju-github/EcommerceUserService/configs"
 	"github.com/liju-github/EcommerceUserService/models"
 )
 
-// ConnectDB establishes a connection to the SQLite database using GORM
-func ConnectDB(cfg config.Config) (*gorm.DB, error) {
-	// Use SQLite driver for GORM, and the database file will be located at the path specified in the config
-	dsn := fmt.Sprintf("%s", "./db.sqlite3") // Example: use the file path from the config if available
+// Connect establishes a connection to the SQLite database using GORM and configures connection pool settings.
+// Returns a GORM database instance or an error if the connection fails.
+func Connect(cfg config.Config) (*gorm.DB, error) {
+	dsn := "./db.sqlite3" // Database path; can be adjusted in the config if needed
 
-	// Open the database connection using GORM
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("error opening database: %w", err)
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// Set connection pool settings (typically used for relational databases)
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, fmt.Errorf("error getting SQLDB instance from GORM: %w", err)
+		return nil, fmt.Errorf("failed to retrieve SQL DB instance: %w", err)
 	}
 
+	// Configure database connection pool settings
 	sqlDB.SetMaxOpenConns(25)
 	sqlDB.SetMaxIdleConns(5)
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
 
-	// Auto-migrate the schema for the models (automatically creates or updates tables)
+	// Auto-migrate database schema for all models
 	if err := db.AutoMigrate(&model.User{}); err != nil {
-		return nil, fmt.Errorf("error auto-migrating database: %w", err)
+		return nil, fmt.Errorf("auto-migration failed: %w", err)
 	}
 
-	log.Println("Successfully connected to SQLite database and auto-migrated the schema")
+	log.Println("Connected to SQLite database and schema migrated")
 	return db, nil
 }
 
-// CloseDB safely closes the SQLite database connection
-func CloseDB(db *gorm.DB) {
-	// Ensure db is not nil before attempting to close the connection
+// Close terminates the SQLite database connection safely.
+func Close(db *gorm.DB) {
 	if db == nil {
-		log.Println("No database connection to close.")
+		log.Println("No active database connection to close.")
 		return
 	}
 
-	// Get the underlying SQL database connection for closing
 	sqlDB, err := db.DB()
 	if err != nil {
-		log.Printf("Error getting SQLDB instance: %v", err)
+		log.Printf("Failed to retrieve SQL DB instance for closure: %v", err)
 		return
 	}
 
-	// Attempt to close the database connection
 	if err := sqlDB.Close(); err != nil {
-		log.Printf("Error closing database connection: %v", err)
+		log.Printf("Failed to close database connection: %v", err)
 		return
 	}
-	log.Println("SQLite database connection closed successfully")
+
+	log.Println("Database connection closed")
 }

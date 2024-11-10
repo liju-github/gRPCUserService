@@ -17,6 +17,7 @@ type UserRepository interface {
 	UpdateUser(user *model.User) error
 	StoreVerificationCode(userID, code string) error
 	GetVerificationCode(userID string) (string, error)
+	CheckBan(userID string)(bool,error)
 }
 
 type userRepository struct {
@@ -127,4 +128,15 @@ func (r *userRepository) GetVerificationCode(userID string) (string, error) {
 		return "", fmt.Errorf("failed to get verification code: %w", err)
 	}
 	return user.VerificationCode, nil
+}
+
+func (r *userRepository)CheckBan(userID string) (bool,error){
+	var user model.User
+	if err:=r.db.Select("verification_code").Where("id = ?", userID).First(&user).Error;err!=nil{
+		return true, errors.New("check ban failed")
+	}
+	if user.IsBanned{
+		return true,nil
+	}
+	return false,nil
 }

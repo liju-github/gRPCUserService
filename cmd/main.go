@@ -4,34 +4,42 @@ import (
 	"log"
 	"net"
 
-	"github.com/liju-github/EcommerceUserService/configs"
+	config "github.com/liju-github/EcommerceUserService/configs"
 	"github.com/liju-github/EcommerceUserService/db"
 	"github.com/liju-github/EcommerceUserService/proto/user"
 	"github.com/liju-github/EcommerceUserService/repository"
 	"github.com/liju-github/EcommerceUserService/service"
+	util "github.com/liju-github/EcommerceUserService/utils"
 	"google.golang.org/grpc"
 )
 
 func main() {
+	// Load configuration
 	cfg := config.LoadConfig()
-	dbConn, err := db.ConnectDB(cfg)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
+	util.SetJWTSecretKey(cfg.JWTSecretKey)
 
+	// Initialize database connection
+	dbConn, err := db.Connect(cfg)
+	if err != nil {
+		log.Fatalf("Database connection failed: %v", err)
+	}
+	defer db.Close(dbConn)
+
+	// Initialize repository and service
 	userRepo := repository.NewUserRepository(dbConn)
 	userService := service.NewUserService(userRepo)
 
-	listener, err := net.Listen("tcp", ":50000")
+	// Start gRPC server
+	listener, err := net.Listen("tcp", ":"+cfg.GRPCPort)
 	if err != nil {
-		log.Fatalf("Failed to listen : %v", err)
+		log.Fatalf("Failed to start listener: %v", err)
 	}
 
 	grpcServer := grpc.NewServer()
 	user.RegisterUserServiceServer(grpcServer, userService)
 
-	log.Println("Server is running")
+	log.Println("User Service is running on gRPC port: " + cfg.GRPCPort)
 	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatalf("Failed to serve gRPC server: %v", err)
+		log.Fatalf("gRPC server startup failed: %v", err)
 	}
 }
