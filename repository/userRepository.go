@@ -18,6 +18,8 @@ type UserRepository interface {
 	StoreVerificationCode(userID, code string) error
 	GetVerificationCode(userID string) (string, error)
 	CheckBan(userID string)(bool,error)
+	UnBanUser(userID string)(error)
+	BanUser(userID string) (error)
 }
 
 type userRepository struct {
@@ -139,4 +141,50 @@ func (r *userRepository)CheckBan(userID string) (bool,error){
 		return true,nil
 	}
 	return false,nil
+}
+
+// BanUser bans a user by setting their IsBanned status to true
+func (r *userRepository) BanUser(userID string) error {
+	// Check if the user exists
+	var user model.User
+	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user not found")
+		}
+		return fmt.Errorf("failed to find user: %w", err)
+	}
+
+	// Update the user's IsBanned status to true
+	result := r.db.Model(&user).Update("is_banned", true)
+	if result.Error != nil {
+		return fmt.Errorf("failed to ban user: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("no rows affected, user may already be banned")
+	}
+
+	return nil
+}
+
+// UnBanUser unbans a user by setting their IsBanned status to false
+func (r *userRepository) UnBanUser(userID string) error {
+	// Check if the user exists
+	var user model.User
+	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user not found")
+		}
+		return fmt.Errorf("failed to find user: %w", err)
+	}
+
+	// Update the user's IsBanned status to false
+	result := r.db.Model(&user).Update("is_banned", false)
+	if result.Error != nil {
+		return fmt.Errorf("failed to unban user: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("no rows affected, user may already be unbanned")
+	}
+
+	return nil
 }

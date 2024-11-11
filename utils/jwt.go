@@ -10,7 +10,7 @@ import (
 
 // CustomClaims extends jwt.StandardClaims
 type CustomClaims struct {
-	UserID     string `json:"userId"`
+	UserID     string `json:"userid"`
 	Email      string `json:"email"`
 	Role       string `json:"role"`
 	Reputation int32  `json:"reputation"`
@@ -28,30 +28,7 @@ func SetJWTSecretKey(secret string) {
 	JWTSecretKey = secret
 }
 
-// GenerateToken creates a new JWT token
-func GenerateToken(user *model.User) (string, error) {
-	claims := CustomClaims{
-		UserID:     user.ID,
-		Email:      user.Email,
-		Role:       "user", // Default role
-		Reputation: user.Reputation,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExpiry)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "ecommerce-user-service",
-			Subject:   user.ID,
-		},
-	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString([]byte(JWTSecretKey))
-	if err != nil {
-		return "", fmt.Errorf("failed to sign token: %w", err)
-	}
-
-	return signedToken, nil
-}
 
 // ValidateToken verifies the JWT token
 func ValidateToken(tokenString string) (*CustomClaims, error) {

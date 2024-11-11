@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -94,15 +95,9 @@ func (s *UserService) Login(ctx context.Context, req *userPb.LoginRequest) (*use
 		return nil, model.ErrInvalidPassword
 	}
 
-	// Generate JWT token
-	token, err := util.GenerateToken(user)
-	if err != nil {
-		return nil, model.ErrTokenGeneration
-	}
 
 	return &userPb.LoginResponse{
 		Success: true,
-		Token:   token,
 		UserId:  user.ID,
 	}, nil
 }
@@ -177,7 +172,7 @@ func (s *UserService) GetUserByToken(ctx context.Context, req *userPb.GetUserByT
 		Pincode:     user.Pincode,
 		PhoneNumber: user.PhoneNumber,
 		IsVerified:  user.IsVerified,
-		Banned:      false,
+		IsBanned:    false,
 	}
 
 	return response, nil
@@ -187,13 +182,15 @@ func (s *UserService) GetUserByToken(ctx context.Context, req *userPb.GetUserByT
 func (s *UserService) UpdateProfile(ctx context.Context, req *userPb.UpdateProfileRequest) (*userPb.UpdateProfileResponse, error) {
 	// Verify token first
 	fmt.Println("the request is ", req)
+
+	// Fetch user by ID
 	user, err := s.repo.GetUserByID(req.UserId)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println("the profile is ", req)
 
-	// Update user fields
+	// Update user fields if new values are provided
 	if req.Name != "" {
 		user.Name = req.Name
 	}
@@ -213,22 +210,86 @@ func (s *UserService) UpdateProfile(ctx context.Context, req *userPb.UpdateProfi
 		user.PhoneNumber = req.PhoneNumber
 	}
 
+	// Save updated user profile in repository
 	if err := s.repo.UpdateUser(user); err != nil {
 		return nil, fmt.Errorf("failed to update profile: %w", err)
 	}
 
+	// Refetch the updated user data to ensure data consistency
+	user, err = s.repo.GetUserByID(req.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Prepare response with updated profile details
 	return &userPb.UpdateProfileResponse{
 		Success: true,
-		Message: "Profile updated successfully",
+		Message: "Profile updated successfullyyy",
+		Profile: &userPb.ProfileResponse{
+			UserId:      user.ID,
+			Email:       user.Email,
+			Name:        user.Name,
+			Reputation:  user.Reputation,
+			StreetName:  user.StreetName,
+			Locality:    user.Locality,
+			State:       user.State,
+			Pincode:     user.Pincode,
+			PhoneNumber: user.PhoneNumber,
+			IsVerified:  user.IsVerified,
+			IsBanned:    user.IsBanned,
+		},
 	}, nil
 }
 
-func (s *UserService) CheckBan(ctx context.Context, req *userPb.CheckBanRequest) (*userPb.CheckBanResponse,error) {
+func (s *UserService) CheckBan(ctx context.Context, req *userPb.CheckBanRequest) (*userPb.CheckBanResponse, error) {
 
-	status,error:= s.repo.CheckBan(req.UserID)
+	status, error := s.repo.CheckBan(req.UserID)
 
 	return &userPb.CheckBanResponse{
 		BanStatus: status,
-	},error
+	}, error
 
+}
+
+func (s *UserService) BanUser(ctx context.Context, req *userPb.BanUserRequest) (*userPb.BanUserResponse, error) {
+	if req.UserId == "" {
+		return &userPb.BanUserResponse{
+			Success: false,
+			Message: "User Ban failed",
+		}, errors.New("userId doesnt exist")
+	}
+
+	if err := s.repo.BanUser(req.UserId); err != nil {
+		return &userPb.BanUserResponse{
+			Success: false,
+			Message: "User Ban failed",
+		}, errors.New(err.Error())
+	}
+
+	return &userPb.BanUserResponse{
+		Success: true,
+		Message: "User Banned Succesfully",
+	}, nil
+
+}
+
+func (s *UserService) UnBanUser(ctx context.Context, req *userPb.UnBanUserRequest) (*userPb.UnBanUserResponse, error) {
+if req.UserId == "" {
+		return &userPb.UnBanUserResponse{
+			Success: false,
+			Message: "User UnBan failed",
+		}, errors.New("userId doesnt exist")
+	}
+
+	if err := s.repo.BanUser(req.UserId); err != nil {
+		return &userPb.UnBanUserResponse{
+			Success: false,
+			Message: "User UnBan failed",
+		}, errors.New(err.Error())
+	}
+
+	return &userPb.UnBanUserResponse{
+		Success: true,
+		Message: "User UnBanned Succesfully",
+	}, nil
 }
