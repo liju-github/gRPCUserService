@@ -15,7 +15,6 @@ import (
 	util "github.com/liju-github/EcommerceUserService/utils"
 )
 
-// JWT related constants
 const (
 	TokenExpiry = 24 * time.Hour
 )
@@ -25,7 +24,6 @@ type UserService struct {
 	repo repository.UserRepository
 }
 
-// CustomClaims extends jwt.StandardClaims
 type CustomClaims struct {
 	UserID     string `json:"userId"`
 	Email      string `json:"email"`
@@ -37,10 +35,36 @@ type CustomClaims struct {
 func NewUserService(repo repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
+func (s *UserService) GetAllUsers(ctx context.Context, req *userPb.GetAllUsersRequest) (*userPb.GetAllUsersResponse, error) {
+	users, err := s.repo.GetAllUsers()
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve users: %w", err)
+	}
 
-// Register creates a new user
+	var userResponses []*userPb.User
+	for _, user := range users {
+		userResponses = append(userResponses, &userPb.User{
+			Id:          user.ID,
+			Email:       user.Email,
+			Name:        user.Name,
+			Reputation:  user.Reputation,
+			StreetName:  user.StreetName,
+			Locality:    user.Locality,
+			State:       user.State,
+			Pincode:     user.Pincode,
+			PhoneNumber: user.PhoneNumber,
+			IsVerified:  user.IsVerified,
+			IsBanned:    user.IsBanned,
+		})
+	}
+
+	return &userPb.GetAllUsersResponse{
+		Success: true,
+		Users:   userResponses,
+	}, nil
+}
+
 func (s *UserService) Register(ctx context.Context, req *userPb.RegisterRequest) (*userPb.RegisterResponse, error) {
-	// Check if email already exists
 	existingUser, err := s.repo.GetUserByEmail(req.Email)
 	if err == nil && existingUser != nil {
 		return nil, model.ErrDuplicateEmail
@@ -94,7 +118,6 @@ func (s *UserService) Login(ctx context.Context, req *userPb.LoginRequest) (*use
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		return nil, model.ErrInvalidPassword
 	}
-
 
 	return &userPb.LoginResponse{
 		Success: true,
@@ -274,14 +297,14 @@ func (s *UserService) BanUser(ctx context.Context, req *userPb.BanUserRequest) (
 }
 
 func (s *UserService) UnBanUser(ctx context.Context, req *userPb.UnBanUserRequest) (*userPb.UnBanUserResponse, error) {
-if req.UserId == "" {
+	if req.UserId == "" {
 		return &userPb.UnBanUserResponse{
 			Success: false,
 			Message: "User UnBan failed",
 		}, errors.New("userId doesnt exist")
 	}
 
-	if err := s.repo.BanUser(req.UserId); err != nil {
+	if err := s.repo.UnBanUser(req.UserId); err != nil {
 		return &userPb.UnBanUserResponse{
 			Success: false,
 			Message: "User UnBan failed",

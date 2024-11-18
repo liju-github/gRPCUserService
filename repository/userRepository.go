@@ -20,6 +20,7 @@ type UserRepository interface {
 	CheckBan(userID string)(bool,error)
 	UnBanUser(userID string)(error)
 	BanUser(userID string) (error)
+	GetAllUsers()([]*model.User,error)
 }
 
 type userRepository struct {
@@ -28,6 +29,14 @@ type userRepository struct {
 
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
+}
+
+func (r *userRepository) GetAllUsers() ([]*model.User, error) {
+	var users []*model.User
+	if err := r.db.Find(&users).Error; err != nil {
+		return nil, fmt.Errorf("failed to get all users: %w", err)
+	}
+	return users, nil
 }
 
 // CreateUser creates a new user record
@@ -134,7 +143,7 @@ func (r *userRepository) GetVerificationCode(userID string) (string, error) {
 
 func (r *userRepository)CheckBan(userID string) (bool,error){
 	var user model.User
-	if err:=r.db.Select("verification_code").Where("id = ?", userID).First(&user).Error;err!=nil{
+	if err:=r.db.Select("is_banned").Where("id = ?", userID).First(&user).Error;err!=nil{
 		return true, errors.New("check ban failed")
 	}
 	if user.IsBanned{
@@ -143,9 +152,7 @@ func (r *userRepository)CheckBan(userID string) (bool,error){
 	return false,nil
 }
 
-// BanUser bans a user by setting their IsBanned status to true
 func (r *userRepository) BanUser(userID string) error {
-	// Check if the user exists
 	var user model.User
 	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -154,7 +161,6 @@ func (r *userRepository) BanUser(userID string) error {
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	// Update the user's IsBanned status to true
 	result := r.db.Model(&user).Update("is_banned", true)
 	if result.Error != nil {
 		return fmt.Errorf("failed to ban user: %w", result.Error)
@@ -166,7 +172,6 @@ func (r *userRepository) BanUser(userID string) error {
 	return nil
 }
 
-// UnBanUser unbans a user by setting their IsBanned status to false
 func (r *userRepository) UnBanUser(userID string) error {
 	// Check if the user exists
 	var user model.User
@@ -177,14 +182,10 @@ func (r *userRepository) UnBanUser(userID string) error {
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	// Update the user's IsBanned status to false
-	result := r.db.Model(&user).Update("is_banned", false)
-	if result.Error != nil {
-		return fmt.Errorf("failed to unban user: %w", result.Error)
-	}
-	if result.RowsAffected == 0 {
-		return errors.New("no rows affected, user may already be unbanned")
+	if err := r.db.Model(&user).Updates(map[string]interface{}{"is_banned": false,"id":userID}).Error; err != nil {
+		return fmt.Errorf("failed to unban user: %w", err)
 	}
 
 	return nil
 }
+
